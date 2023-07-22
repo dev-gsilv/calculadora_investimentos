@@ -1,11 +1,13 @@
-import { create, getOne, getAll, remove, removeWhere } from '../controllers/investimentoController.js'
+import { create, getOne, getWhere, getAll, remove, removeWhere } from '../controllers/investimentoController.js'
+import { checkToken } from '../utils/validacoes.js'
 
 const investRoutes = (app) => {
-    app.post('/investimento', create)
-    app.get('/investimento/:id', getOne)
-    app.get('/investimento/', getAll)
-    app.delete('/investimento/:id', remove)
-    app.delete('/investimento', removeWhere)
+    app.post('/investimento', checkToken, create)
+    app.get('/investimento/:id', checkToken, getOne)
+    app.get('/private/investimento/', checkToken, getWhere)
+    app.get('/private/investimento/', checkToken, getAll)
+    app.delete('/investimento/:id', checkToken, remove)
+    app.delete('/private/investimento', checkToken, removeWhere)
 }
 
 export default investRoutes

@@ -22,20 +22,17 @@ export const create = async (req, res) => {
             senha: senhaHash,
         })
 
-        // DEBUG
-        objToConsole(usuarioValidado._doc)
-
         try {
             await usuarioValidado.save()
             res.status(201).json({msg: 'Usuário criado!', usuarioValidado})
         } catch (e) {
             console.error(e)
-            res.status(500).json({msg: 'Server error. Please, try again!'})
+            res.status(500).json({msg: 'Erro no servidor. Por favor, tente novamente!'})
         }
 
     } catch (e) {
         console.error(e)
-        res.status(400).json({msg: 'Invalid request. Please, try again!'})
+        res.status(400).json({msg: 'Requisição inválida. Por favor, tente novamente.'})
     }
 }
 
@@ -89,12 +86,12 @@ export const update = async (req, res) => {
             res.status(200).json({msg: 'Usuário atualizado!'})
         } catch (e) {
             console.error(e)
-            res.status(500).json({msg: 'Server error. Please, try again!'})
+            res.status(500).json({msg: 'Erro no servidor. Por favor, tente novamente!'})
         }
 
     } catch (e) {
         console.error(e)
-        res.status(400).json({msg: 'Invalid request. Please, try again!'})
+        res.status(400).json({msg: 'Requisição inválida. Por favor, tente novamente.'})
     }
 }
 
@@ -115,12 +112,12 @@ export const remove = async (req, res) => {
             res.status(200).json({msg: 'Usuario removido!', Usuario_ID: query._id})
         } catch (e) {
             console.error(e)
-            res.status(500).json({msg: 'Server error. Please, try again!'})
+            res.status(500).json({msg: 'Erro no servidor. Por favor, tente novamente!'})
         }
 
     } catch (e) {
         console.error(e)
-        res.status(400).json({msg: 'Invalid request. Please, try again!'})
+        res.status(400).json({msg: 'Requisição inválida. Por favor, tente novamente.'})
     }
 }
 
@@ -130,14 +127,14 @@ export const removeWhere = async (req, res) => {
 
         try {
             const query = await Usuario.deleteMany(condition)
-            res.status(200).json({'Documents deleted ': query.deletedCount})
+            res.status(200).json({'Usuários removidos: ': query.deletedCount})
         } catch (e) {
             console.error(e)
-            res.status(500).json({msg: 'Server error. Please, try again!'})
+            res.status(500).json({msg: 'Erro no servidor. Por favor, tente novamente!'})
         }
 
     } catch (e) {
         console.error(e)
-        res.status(400).json({msg: 'Invalid request. Please, try again!'})
+        res.status(400).json({msg: 'Requisição inválida. Por favor, tente novamente.'})
     }
 }

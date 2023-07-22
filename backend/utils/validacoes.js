@@ -23,14 +23,17 @@ export const validarDados = (invest) => {
     if((!invest.rentabilidadeAnual) || (Number(invest.rentabilidadeAnual) < 1)){
         return 'O campo rentabilidade é inválido!'    
     }
+    if(!invest.usuario){
+        return 'O campo usuario é inválido!'    
+    }
 }
 
-export const objExist = (queryRes) => {
+export const objExiste = (queryRes) => {
     const callBack = Object.create(resposta)
 
     if(queryRes === undefined || queryRes === null || queryRes.length == 0){
         callBack.htmlStatus = 404
-        callBack.msg = 'Oh não! O que você procura parece que não existe, verifique os parâmetros de busca.'
+        callBack.msg = 'Oh não! O que você buscou não existe, verifique os parâmetros de pesquisa.'
         return callBack
     } else {
         callBack.htmlStatus = 200
@@ -39,53 +42,49 @@ export const objExist = (queryRes) => {
     }
 }
 
-// CHECAR POR FN NÃO USADAS DEPOIS DE FINALIZAR USUARIO E LOGIN
 export async function validarSenha(senhaForm, senhaHash) {
     return await bcrypt.compare(senhaForm, senhaHash)
 }
 
 export async function validarNovoUsuario(dadosForm) {
-    // Null fields
     if(!dadosForm.nome){
-        return 'You must provide a valid nome!'    
+        return 'Você não forneceu um nome válido!'    
     }
 
     const re = /^[a-z0-9.!#$%&'*+\-/=?^_`{|]+@[a-z0-9-]+\.[a-z]+(?:\.[a-z]+)*$/gi
     const reCheck = dadosForm.email.match(re)
     if(!dadosForm.email || reCheck === null ){
-        return 'You must provide a valid email!'    
+        return 'Você não forneceu um e-mail válido!'    
     }
 
     if(!dadosForm.senha || dadosForm.senha.length < 8){
-        return 'You must provide a valid senha!'    
+        return 'Você não forneceu uma senha válida!'    
     }
 
-    // Password confirmation
     if(dadosForm.senha !== dadosForm.confirmarSenha){
-        return 'Password confirmation does not match!'
+        return 'Verifique a confirmação de senha e tente novamente!'
     }
 
-    // Duplicated user
     const usuarioExiste = await Usuario.findOne({ email: dadosForm.email })
     if(usuarioExiste){
-        return 'Email already registered!'
+        return 'Este e-mail já foi registrado!'
     }
 }
 
 export async function validarLogin(dadosForm) {
     if(!dadosForm.email ){
-        return 'You must provide a valid email!'    
+        return 'Você não forneceu um e-mail válido!'    
     }
     if(!dadosForm.senha){
-        return 'You must provide a valid senha!'    
+        return 'Você não forneceu uma senha válida!'    
     }
     const usuarioBD = await Usuario.findOne({ email: dadosForm.email })
     if(!usuarioBD){
-        return 'Invalid email or senha!'
+        return 'Senha ou e-mail inválidos!!'
     }
     const result = await validarSenha(dadosForm.senha, usuarioBD.senha)
     if( !result ){
-        return 'Invalid email or senha!'
+        return 'Senha ou e-mail inválidos!!'
     }
 }
 
@@ -107,7 +106,7 @@ export function checkToken(req, res, next) {
     const authHeader = req.headers["authorization"]
     const token = authHeader && authHeader.split(" ")[1]
   
-    if (!token) return res.status(401).json({ msg: "Access denied!" })
+    if (!token) return res.status(401).json({ msg: "Accesso negado!" })
   
     try {
       const secret = process.env.SECRET
@@ -116,10 +115,11 @@ export function checkToken(req, res, next) {
   
       next();
     } catch (err) {
-      res.status(400).json({ msg: "Invalid token!" })
+      res.status(400).json({ msg: "Token inválido!" })
     }
 }
 
+/*
 //  CAST EMPTY STRING TO UNDEFINED, TO COMPLY WITH MONGOOSE MODEL CLASS VALIDATOR
 export const modifiedCast = (string) => {
     if(string === ''){
@@ -128,7 +128,7 @@ export const modifiedCast = (string) => {
 return string
 }
 
-/* FORMAT LONG DECIMALS TO 2 DIGITS
+// FORMAT LONG DECIMALS TO 2 DIGITS
 export const roundOff = (v) => {
     // JS WON'T SAVE 0 VALUES ON THE RIGHT (E.G 1.00 => 1; 1.10 => 1.1)
     let fix = v.toString()
@@ -151,4 +151,5 @@ export const roundOff = (v) => {
         fix = Number(fix)
         return fix
     }
-}*/
+}
+*/

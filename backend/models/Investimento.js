@@ -17,6 +17,10 @@ export const investSchema = new mongoose.Schema(
             incidente: {
                 type: Boolean
             }
+        },
+        usuario: {
+            type: mongoose.ObjectId,
+            ref: 'Usuario',
         }
     },
     { timestamps: true }

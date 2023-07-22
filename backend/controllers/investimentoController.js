@@ -1,5 +1,5 @@
 import Investimento from '../models/Investimento.js'
-import { validarDados, objExist } from '../utils/validacoes.js'
+import { validarDados, objExiste } from '../utils/validacoes.js'
 import { toLocal, toBrl } from '../utils/currencyFormat.js'
 
 // CONVERTER JUROS AO ANO PARA JUROS AO DIA
@@ -57,8 +57,8 @@ export const calculadora = async (tipoInvest, indexador, valorInvestido, prazo, 
 
         // INVEST INCIDENTE DE IR
         if (naoIsentoIr.includes(tipoInvest)){
-            const lucro = await calcularLucro(indexador, jurosAoDia, valorInvestido, prazo)
-            let rendimentos, aliquotaIr, lucroLiq, impostoRenda, irCobrado
+            const lucro = await calcularLucro(indexador, rentabilidadeAnual, valorInvestido, prazo)
+            let rendimentos, aliquotaIr, lucroLiq, irCobrado
             let resultado = {}
 
             // IMPOSTO DE RENDA REGRESSIVO
@@ -143,12 +143,12 @@ export const calculadora = async (tipoInvest, indexador, valorInvestido, prazo, 
 
 export const create = async (req, res) => {
     try {
-        const {nome, tipoInvest, indexador, valorInvestido, prazoMeses, rentabilidadeAnual} = req.body
-        const novoInvest = {nome, tipoInvest, indexador, valorInvestido, prazoMeses, rentabilidadeAnual}
+        const {nome, tipoInvest, indexador, valorInvestido, prazoMeses, rentabilidadeAnual, usuario} = req.body
+        const novoInvest = {nome, tipoInvest, indexador, valorInvestido, prazoMeses, rentabilidadeAnual, usuario}
         
-        const erroValidação = await validarDados(novoInvest)
-        if(erroValidação){
-            return res.status(422).json({msg: erroValidação})
+        const erro = await validarDados(novoInvest)
+        if(erro){
+            return res.status(422).json({msg: erro})
         }
 
         // CALCULAR O PRAZO DO INVESTIMENTO, EM DIAS
@@ -156,7 +156,6 @@ export const create = async (req, res) => {
 
         const resultado = await calculadora(tipoInvest, indexador, Number(valorInvestido), Number(prazo), Number(rentabilidadeAnual))
         
-        // OBJECT Invest
         const invest = new Investimento({
             nome,
             tipo: tipoInvest,
@@ -169,7 +168,8 @@ export const create = async (req, res) => {
             impostoRenda: {
                 valor: resultado.impostoRenda.valor,
                 incidente: resultado.impostoRenda.incidente
-            }
+            },
+            usuario
         })
 
         try {
@@ -177,40 +177,57 @@ export const create = async (req, res) => {
             res.status(201).json({msg: 'Simulação de investimento criada!', invest})
         } catch (e) {
             console.error(e)
-            res.status(500).json({msg: 'Server error. Please, try again!'})
+            res.status(500).json({msg: 'Erro no servidor. Por favor, tente novamente!'})
         }
 
     } catch (e) {
         console.error(e)
-        res.status(400).json({msg: 'Invalid request. Please, try again!'})
+        res.status(400).json({msg: 'Requisição inválida. Por favor, tente novamente.'})
     }
 }
 
 export const getOne = async (req, res) => {
     const id = req.params.id
 
-    const invest = await objExist(await Investimento.findById(id))
+    const invest = await objExiste(await Investimento.findById(id))
 
     return res.status(invest.htmlStatus).json({ msg: invest.msg })
 }
 
-export const getAll = async (req, res) => {
-    const invest = await objExist(await Investimento.find({}))
+export const getWhere = async (req, res) => {
+    try {
+        const condition = req.body.condition
 
-    return res.status(invest.htmlStatus).json({ msg: invest.msg })
+        try {
+            const query = await Investimento.find(condition)
+            res.status(200).json({Encontrados: query.length, Investimentos: query})
+        } catch (e) {
+            console.error(e)
+            res.status(500).json({msg: 'Erro no servidor. Por favor, tente novamente!'})
+        }
+
+    } catch (e) {
+        console.error(e)
+        res.status(400).json({msg: 'Requisição inválida. Por favor, tente novamente.'})
+    }
+}
+
+export const getAll = async (req, res) => {
+    const invest = await objExiste(await Investimento.find({}))
+
+    return res.status(invest.htmlStatus).json({ Total: invest.msg.length, Investimentos: invest.msg })
 }
 
 export const remove = async (req, res) => {
     try {
         const id = req.params.id
 
-        const validacao = await objExist(await Investimento.findById(id))
+        const validacao = await objExiste(await Investimento.findById(id))
 
         if(validacao.htmlStatus == 404){
             return res.status(validacao.htmlStatus).json({ msg: validacao.msg }) 
         }
 
-        // KEEP PRODUCT OBJ FROM DB
         const invest = validacao.msg
 
         try {
@@ -223,7 +240,7 @@ export const remove = async (req, res) => {
 
     } catch (e) {
         console.error(e)
-        res.status(400).json({msg: 'Invalid request. Please, try again!'})
+        res.status(400).json({msg: 'Requisição inválida. Por favor, tente novamente.'})
     }
 }
 
@@ -236,11 +253,11 @@ export const removeWhere = async (req, res) => {
             res.status(200).json({'Investimentos removidos': query.deletedCount})
         } catch (e) {
             console.error(e)
-            res.status(500).json({msg: 'Server error. Please, try again!'})
+            res.status(500).json({msg: 'Erro no servidor. Por favor, tente novamente!'})
         }
 
     } catch (e) {
         console.error(e)
-        res.status(400).json({msg: 'Invalid request. Please, try again!'})
+        res.status(400).json({msg: 'Requisição inválida. Por favor, tente novamente.'})
     }
 }

@@ -1,30 +1,35 @@
-export const login = async (req, res) => {
+import Usuario from '../models/Usuario.js'
+import { validarLogin } from '../utils/validacoes.js'
+import jwt from 'jsonwebtoken'
+import 'dotenv/config'
+
+export const login2 = async (req, res) => {
     return res.status(403).json({msg: 'Login TBD'})
 }
 
-export const login2 = async (req,res) => {
-    const { email, password } = req.body
+export const login = async (req,res) => {
+    const { email, senha } = req.body
 
-    const rawUser = {email, password}
-    const fail = await validateLogin(rawUser)
-    if(fail){
-        return res.status(422).json({msg: fail})
+    const usuarioLogin = {email, senha}
+    const erro = await validarLogin(usuarioLogin)
+    if(erro){
+        return res.status(422).json({msg: erro})
     }
 
     try {
         const secret = process.env.SECRET
-        const user = await User.findOne({ email:rawUser.email })
+        const usuario = await Usuario.findOne({ email:usuarioLogin.email })
         const token = jwt.sign(
             {
-                id: user._id,
+                id: usuario._id,
             },
             secret
         )
 
-        res.status(200).json({ msg: 'Authentication successful!', token })
+        res.status(200).json({ msg: 'Usuário autenticado com sucesso!', token })
         
     } catch (e) {
         console.error(e)
-        res.status(500).json({msg: 'Server error. Please, try again!'})
+        res.status(500).json({msg: 'Erro no servidor. Por favor, tente novamente!'})
     }
 }
