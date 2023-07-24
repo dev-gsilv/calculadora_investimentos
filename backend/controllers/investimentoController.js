@@ -143,8 +143,8 @@ export const calculadora = async (tipoInvest, indexador, valorInvestido, prazo, 
 
 export const create = async (req, res) => {
     try {
-        const {nome, tipoInvest, indexador, valorInvestido, prazoMeses, rentabilidadeAnual, usuario} = req.body
-        const novoInvest = {nome, tipoInvest, indexador, valorInvestido, prazoMeses, rentabilidadeAnual, usuario}
+        const {nome, tipoInvest, indexador, valorInvestido, prazoMeses, rentabilidadeAnual, criadorId} = req.body
+        const novoInvest = {nome, tipoInvest, indexador, valorInvestido, prazoMeses, rentabilidadeAnual, criadorId}
         
         const erro = await validarDados(novoInvest)
         if(erro){
@@ -169,7 +169,7 @@ export const create = async (req, res) => {
                 valor: resultado.impostoRenda.valor,
                 incidente: resultado.impostoRenda.incidente
             },
-            usuario
+            criadorId
         })
 
         try {

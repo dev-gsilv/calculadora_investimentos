@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt'
 import { validarNovoUsuario, validarUsuario, validarSenha } from '../utils/validacoes.js'
 import Usuario from '../models/Usuario.js'
-import { objToConsole } from '../utils/objPrint.js'
+import objToConsole from '../utils/objPrint.js'
 
 export const create = async (req, res) => {
     try {

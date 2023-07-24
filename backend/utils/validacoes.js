@@ -23,7 +23,7 @@ export const validarDados = (invest) => {
     if((!invest.rentabilidadeAnual) || (Number(invest.rentabilidadeAnual) < 1)){
         return 'O campo rentabilidade é inválido!'    
     }
-    if(!invest.usuario){
+    if(!invest.criadorId){
         return 'O campo usuario é inválido!'    
     }
 }

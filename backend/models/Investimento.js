@@ -18,7 +18,7 @@ export const investSchema = new mongoose.Schema(
                 type: Boolean
             }
         },
-        usuario: {
+        criadorId: {
             type: mongoose.ObjectId,
             ref: 'Usuario',
         }
