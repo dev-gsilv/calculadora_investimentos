@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import Usuario from '../models/Usuario.js'
 
-const resposta = { htmlStatus: NaN, msg: ''}
+const resposta = { httpCode: NaN, msg: ''}
 
 export const validarDados = (invest) => {
     if(!invest.nome){
@@ -32,11 +32,11 @@ export const objExiste = (queryRes) => {
     const callBack = Object.create(resposta)
 
     if(queryRes === undefined || queryRes === null || queryRes.length == 0){
-        callBack.htmlStatus = 404
-        callBack.msg = 'Oh não! O que você buscou não existe, verifique os parâmetros de pesquisa.'
+        callBack.httpCode = 404
+        callBack.msg = 'Não há resultados para sua busca.'
         return callBack
     } else {
-        callBack.htmlStatus = 200
+        callBack.httpCode = 200
         callBack.msg = queryRes
         return callBack
     }
@@ -92,11 +92,11 @@ export async function validarUsuario(queryRes) {
     const callBack = Object.create(resposta)
 
     if(queryRes === undefined || queryRes === null || queryRes.length == 0){
-        callBack.htmlStatus = 404
+        callBack.httpCode = 404
         callBack.msg = 'Nenhum usuário encontrado!'
         return callBack
     } else {
-        callBack.htmlStatus = 200
+        callBack.httpCode = 200
         callBack.msg = queryRes
         return callBack
     }

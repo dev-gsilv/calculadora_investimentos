@@ -32,20 +32,32 @@ let grantObjects = {
     
 const ac = new AccessControl(grantObjects);
 
-export const validarPermissao = async (req, res, next) => {
+export const permissionMiddleware = async (req, res, next) => {
+    try {
+        const loggedRole = req.body.role
 
-    const investimento = await Investimento.findById(req.params.id).populate('criadorId').exec()
-    const criadorId = investimento._doc.criadorId
+        // ADMIN CASE
+        let permission = ac.can(loggedRole).readAny("investimento") && ac.can(loggedRole).deleteAny("investimento")
 
-    let permission = ac.can(req.body.role).readAny("investimento");
+        //console.log('admin case '+permission.granted)
 
-    if (!permission.granted) {
-        if ((criadorId._id.toString()) == req.body.usuarioId) {
-            permission = ac.can(req.body.role).readOwn("investimento");
+        // USUARIO COMUM CASE
+        if (!permission.granted) {
+            permission = ac.can(loggedRole).readOwn("investimento") && ac.can(loggedRole).deleteOwn("investimento");
+            //console.log('usuario case '+permission.granted)
+
         }
-    if (permission.granted) {
-        next()
-    } else {
-        res.status(403).send('Você não tem permissão para visualizar este recurso!').end();
-    }}
+
+        if (permission.granted) {
+            //console.log('next() case '+permission.granted)
+            next()
+        } else {
+            res.status(403).send({msg: 'Você não tem permissão para visualizar/alterar este recurso.'}).end();
+        }
+
+    } catch (e) {
+        console.log(e)
+        res.status(500).send({msg: 'Erro no servidor. Tente novamente'});
+
+    }
 }

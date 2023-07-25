@@ -41,13 +41,13 @@ export const getOne =  async (req, res) => {
 
     const usuario = await validarUsuario(await Usuario.findById(id, "-senha"))
 
-    return res.status(usuario.htmlStatus).json({ msg: usuario.msg })
+    return res.status(usuario.httpCode).json({ msg: usuario.msg })
 }
 
 export const getAll = async (req, res) => {
     const usuarios = await validarUsuario(await Usuario.find({}, "-senha"))
 
-    return res.status(usuarios.htmlStatus).json({ 
+    return res.status(usuarios.httpCode).json({ 
         Total: usuarios.msg.length, 
         Usuarios: usuarios.msg 
     })    
@@ -60,8 +60,8 @@ export const update = async (req, res) => {
 
         const usuarioCheck = await validarUsuario(await Usuario.findById(id))
 
-        if(usuarioCheck.htmlStatus === 404){
-            return res.status(usuarioCheck.htmlStatus).json({ msg: usuarioCheck.msg }) 
+        if(usuarioCheck.httpCode === 404){
+            return res.status(usuarioCheck.httpCode).json({ msg: usuarioCheck.msg }) 
         }
 
         const usuario = usuarioCheck.msg
@@ -101,8 +101,8 @@ export const remove = async (req, res) => {
 
         const usuarioCheck = await validarUsuario(await Usuario.findById(id))
 
-        if(usuarioCheck.htmlStatus == 404){
-            return res.status(usuarioCheck.htmlStatus).json({ msg: usuarioCheck.msg }) 
+        if(usuarioCheck.httpCode == 404){
+            return res.status(usuarioCheck.httpCode).json({ msg: usuarioCheck.msg }) 
         }
 
         const usuario = usuarioCheck.msg

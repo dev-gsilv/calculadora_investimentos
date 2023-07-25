@@ -1,6 +1,8 @@
 import Investimento from '../models/Investimento.js'
 import { validarDados, objExiste } from '../utils/validacoes.js'
 import { toLocal, toBrl } from '../utils/currencyFormat.js'
+import objToConsole from '../utils/objPrint.js'
+
 
 // CONVERTER JUROS AO ANO PARA JUROS AO DIA
 const calcularJurosAoDia = (rentabilidadeAnual) => {
@@ -186,21 +188,34 @@ export const create = async (req, res) => {
     }
 }
 
+// FALTA ADICIONAR VEFIRICAÇÃO DE ROLES
 export const getOne = async (req, res) => {
     const id = req.params.id
 
-    const invest = await objExiste(await Investimento.findById(id))
+    const query = await objExiste(await Investimento.findById(id))
 
-    return res.status(invest.htmlStatus).json({ msg: invest.msg })
+    return res.status(query.httpCode).json({ msg: query.msg })
 }
 
 export const getWhere = async (req, res) => {
     try {
-        const condition = req.body.condition
+        let condition = req.body.condition
+        const usuarioId = req.body.usuarioId
+        const role = req.body.role   
 
         try {
-            const query = await Investimento.find(condition)
-            res.status(200).json({Encontrados: query.length, Investimentos: query})
+            if(role == 'admin'){
+                const query = await objExiste(await Investimento.find(condition))
+                return res.status(query.httpCode).json({ Total: query.msg.length, adminView: query.msg })
+            }
+            if(role == 'usuario'){
+                const usuarioFiltro = {criadorId: usuarioId}
+                const filtro = Object.assign(usuarioFiltro, condition)
+        
+                const query = await objExiste(await Investimento.find(filtro))
+                return res.status(query.httpCode).json({ Total: await Investimento.find(filtro).countDocuments(), Lista: query.msg })    
+            }
+        
         } catch (e) {
             console.error(e)
             res.status(500).json({msg: 'Erro no servidor. Por favor, tente novamente!'})
@@ -213,26 +228,47 @@ export const getWhere = async (req, res) => {
 }
 
 export const getAll = async (req, res) => {
-    const invest = await objExiste(await Investimento.find({}))
+    const usuarioId = req.body.usuarioId
+    const role = req.body.role
 
-    return res.status(invest.htmlStatus).json({ Total: invest.msg.length, Investimentos: invest.msg })
+    if(role == 'admin'){
+        const query = await objExiste(await Investimento.find({}))
+        return res.status(query.httpCode).json({ Total: query.msg.length, adminView: query.msg })
+    }
+    if(role == 'usuario'){
+        const query = await objExiste(await Investimento.find({criadorId: usuarioId}))
+        return res.status(query.httpCode).json({ Total: query.msg.length, Lista: query.msg })    
+    }
+
 }
 
 export const remove = async (req, res) => {
     try {
-        const id = req.params.id
+        const investimentoId = req.params.id
+        const role = req.body.role
+        const usuarioId = req.body.usuarioId
 
-        const validacao = await objExiste(await Investimento.findById(id))
+        const query = await objExiste(await Investimento.findById(investimentoId))
 
-        if(validacao.htmlStatus == 404){
-            return res.status(validacao.htmlStatus).json({ msg: validacao.msg }) 
+        if(query.httpCode == 404){
+            return res.status(query.httpCode).json({ msg: query.msg }) 
         }
 
-        const invest = validacao.msg
+        const investimento = query.msg
 
         try {
-            const query = await invest.deleteOne({id: id})
-            res.status(200).json({msg: query.nome + " (id: " + query._id + ") " + 'removido da base de dados!'})
+            if(role == 'admin'){
+                const query = await investimento.deleteOne({_id: investimentoId})
+                return res.status(200).json({msg: query.nome + " (id: " + query._id + ") " + 'removido da base de dados!'})    
+            }
+            if(role == 'usuario'){
+                if(usuarioId != investimento.criadorId){
+                    return res.status(403).json({msg: 'Você não tem permissão para remover este recurso!'})
+                }
+                const query = await investimento.deleteOne({_id: investimentoId})
+                return res.status(200).json({msg: query.nome + " (id: " + query._id + ") " + 'removido da base de dados!'})    
+                
+            }
         } catch (e) {
             console.error(e)
             res.status(500).json({msg: 'Server error.' + e + ' Please, try again!'})
@@ -244,6 +280,7 @@ export const remove = async (req, res) => {
     }
 }
 
+// FALTA ADICIONAR VEFIRICAÇÃO DE ROLES
 export const removeWhere = async (req, res) => {
     try {
         const condition = req.body.condition
