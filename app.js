@@ -7,9 +7,7 @@ app.use(express.json())
 import conn from './backend/db/mongo.js'
 conn();
 
-const apiPort = 5000
-app.listen(apiPort)
-console.log(`API running on port ${apiPort}`)
+app.listen(process.env.API_PORT)
 
 // Routes
 import routes from './backend/routes/router.js'

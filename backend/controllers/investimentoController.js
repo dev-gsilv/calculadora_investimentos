@@ -188,20 +188,36 @@ export const create = async (req, res) => {
     }
 }
 
-// FALTA ADICIONAR VEFIRICAÇÃO DE ROLES
 export const getOne = async (req, res) => {
     const id = req.params.id
+    const usuarioId = req.get('usuarioId')
+    const role = req.get('role')
+    let query
 
-    const query = await objExiste(await Investimento.findById(id))
+    if(role == 'admin'){
+        query = await objExiste(await Investimento.findById(id))
+        return res.status(query.httpCode).json({ msg: query.msg })
+    }
 
-    return res.status(query.httpCode).json({ msg: query.msg })
+    if(role == 'usuario'){
+        query = await objExiste(await Investimento.findById(id))
+
+        if(query.httpCode == 404){return res.status(query.httpCode).json({ msg: query.msg })}
+
+        const investimento = query.msg
+
+        if(usuarioId != investimento.criadorId){
+            return res.status(403).json({msg: 'Você não tem permissão para ver este recurso!'})
+        }
+        return res.status(200).json({msg: investimento})    
+}
 }
 
 export const getWhere = async (req, res) => {
     try {
         let condition = req.body.condition
-        const usuarioId = req.body.usuarioId
-        const role = req.body.role   
+        const usuarioId = req.get('usuarioId')
+        const role = req.get('role')  
 
         try {
             if(role == 'admin'){
@@ -228,8 +244,8 @@ export const getWhere = async (req, res) => {
 }
 
 export const getAll = async (req, res) => {
-    const usuarioId = req.body.usuarioId
-    const role = req.body.role
+    const usuarioId = req.get('usuarioId')
+    const role = req.get('role')
 
     if(role == 'admin'){
         const query = await objExiste(await Investimento.find({}))
@@ -245,8 +261,8 @@ export const getAll = async (req, res) => {
 export const remove = async (req, res) => {
     try {
         const investimentoId = req.params.id
-        const role = req.body.role
-        const usuarioId = req.body.usuarioId
+        const role = req.get('role')
+        const usuarioId = req.get('usuarioId')
 
         const query = await objExiste(await Investimento.findById(investimentoId))
 
