@@ -100,7 +100,7 @@ export const calculadora = async (tipoInvest, indexador, valorInvestido, prazo, 
                 return resultado
             }
 
-            if (prazo > 360 && prazo < 720){
+            if (prazo > 360 && prazo < 721){
                 aliquotaIr = 0.175
                 irCobrado = (Number(lucro) * aliquotaIr)
                 lucroLiq = (Number(lucro) - Number(irCobrado))
@@ -145,9 +145,10 @@ export const calculadora = async (tipoInvest, indexador, valorInvestido, prazo, 
 
 export const create = async (req, res) => {
     try {
-        const {nome, tipoInvest, indexador, valorInvestido, prazoMeses, rentabilidadeAnual, criadorId} = req.body
+        const {nome, tipoInvest, indexador, valorInvestido, prazoMeses, rentabilidadeAnual} = req.body
+        const criadorId = req.get('usuarioId')
         const novoInvest = {nome, tipoInvest, indexador, valorInvestido, prazoMeses, rentabilidadeAnual, criadorId}
-        
+
         const erro = await validarDados(novoInvest)
         if(erro){
             return res.status(422).json({msg: erro})
@@ -296,14 +297,25 @@ export const remove = async (req, res) => {
     }
 }
 
-// FALTA ADICIONAR VEFIRICAÇÃO DE ROLES
 export const removeWhere = async (req, res) => {
     try {
         const condition = req.body.condition
+        const usuarioId = req.get('usuarioId')
+        const role = req.get('role')  
 
         try {
-            const query = await Investimento.deleteMany(condition)
-            res.status(200).json({'Investimentos removidos': query.deletedCount})
+            if(role == 'admin'){
+                const query = await Investimento.deleteMany(condition)
+                res.status(200).json({'Investimentos removidos': query.deletedCount})
+            }
+            if(role == 'usuario'){
+                const usuarioFiltro = {criadorId: usuarioId}
+                const filtro = Object.assign(usuarioFiltro, condition)
+        
+                const query = (await Investimento.deleteMany(filtro))
+                objToConsole(query)
+                return res.status(200).json({ 'Investimentos removidos': query.deletedCount })    
+            }
         } catch (e) {
             console.error(e)
             res.status(500).json({msg: 'Erro no servidor. Por favor, tente novamente!'})
