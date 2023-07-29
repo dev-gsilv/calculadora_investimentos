@@ -4,7 +4,6 @@ import 'dotenv/config'
 
 export const login = async (req,res) => {
     const authReader = req.headers["authorization"]
-    console.log(req.headers.authorization)
 
     if(!authReader){
         res.setHeader('WWW-Authenticate', 'Basic')
@@ -18,6 +17,7 @@ export const login = async (req,res) => {
     const checarCredenciais = await validarCredenciais(email, senha)
 
     if( checarCredenciais.httpCode != 100){
+        res.setHeader('WWW-Authenticate', 'Basic')
         return res.status(401).json({Erro: checarCredenciais.msg})
     }
 
