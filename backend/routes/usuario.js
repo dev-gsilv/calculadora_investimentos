@@ -1,7 +1,8 @@
-import { getOne, getAll, update, remove, removeWhere  } from '../controllers/usuarioController.js'
+import { create, getOne, getAll, update, remove, removeWhere  } from '../controllers/usuarioController.js'
 import { checkToken } from '../utils/validacoes.js'
 
 const userRoutes = (app) => {
+    app.post('/usuario/registro', create)
     app.get('/usuario/:id', checkToken, getOne)
     app.get('/usuario/', checkToken, getAll)
     app.put('/usuario/:id', checkToken, update)

@@ -24,7 +24,7 @@ export const create = async (req, res) => {
 
         try {
             await usuarioValidado.save()
-            res.status(201).json({msg: 'Usuário criado!', usuarioValidado})
+            res.status(201).json({msg: `Bem-vindo ao Simulfix, ${usuarioValidado.nome}!`})
         } catch (e) {
             console.error(e)
             res.status(500).json({msg: 'Erro no servidor. Por favor, tente novamente!'})

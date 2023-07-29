@@ -229,8 +229,9 @@ export const getWhere = async (req, res) => {
                 const usuarioFiltro = {criadorId: usuarioId}
                 const filtro = Object.assign(usuarioFiltro, condition)
         
-                const query = await objExiste(await Investimento.find(filtro))
-                return res.status(query.httpCode).json({ Total: await Investimento.find(filtro).countDocuments(), Lista: query.msg })    
+                const arrayInvestimentos = await Investimento.find(filtro)
+                const query = await objExiste(arrayInvestimentos)        
+                return res.status(query.httpCode).json({ Total: arrayInvestimentos.length, Lista: query.msg })    
             }
         
         } catch (e) {
@@ -253,8 +254,9 @@ export const getAll = async (req, res) => {
         return res.status(query.httpCode).json({ Total: query.msg.length, adminView: query.msg })
     }
     if(role == 'usuario'){
-        const query = await objExiste(await Investimento.find({criadorId: usuarioId}))
-        return res.status(query.httpCode).json({ Total: query.msg.length, Lista: query.msg })    
+        const arrayInvestimentos = await Investimento.find({criadorId: usuarioId})
+        const query = await objExiste(arrayInvestimentos)
+        return res.status(query.httpCode).json({ Total: arrayInvestimentos.length, Lista: query.msg })    
     }
 
 }
