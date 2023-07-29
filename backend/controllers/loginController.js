@@ -1,20 +1,19 @@
-import Usuario from '../models/Usuario.js'
 import { validarCredenciais } from '../utils/validacoes.js'
 import jwt from 'jsonwebtoken'
 import 'dotenv/config'
 
 export const login = async (req,res) => {
-    const authReader = req.headers.authorization;
-    console.log(req.headers.authorization);
+    const authReader = req.headers["authorization"]
+    console.log(req.headers.authorization)
 
     if(!authReader){
-        res.setHeader('WWW-Authenticate', 'Basic');
+        res.setHeader('WWW-Authenticate', 'Basic')
         return res.status(401).json({Erro: 'Falha durante o login. Tente novamente!'})
     }
 
-    const auth = new Buffer.from(authReader.split(' ')[1],'base64').toString().split(':');
-    const email = auth[0];
-    const senha = auth[1];
+    const auth = new Buffer.from(authReader.split(' ')[1],'base64').toString().split(':')
+    const email = auth[0]
+    const senha = auth[1]
 
     const checarCredenciais = await validarCredenciais(email, senha)
 

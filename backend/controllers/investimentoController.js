@@ -2,7 +2,6 @@ import Investimento from '../models/Investimento.js'
 import { validarDados, objExiste } from '../utils/validacoes.js'
 import { toLocal, toBrl } from '../utils/currencyFormat.js'
 import objToConsole from '../utils/objPrint.js'
-import SwaggerClient from 'swagger-client';
 
 
 // CONVERTER JUROS AO ANO PARA JUROS AO DIA
