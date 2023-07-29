@@ -61,31 +61,30 @@ export async function validarNovoUsuario(dadosForm) {
         return 'Você não forneceu uma senha válida!'    
     }
 
-    if(dadosForm.senha !== dadosForm.confirmarSenha){
-        return 'Verifique a confirmação de senha e tente novamente!'
-    }
-
     const usuarioExiste = await Usuario.findOne({ email: dadosForm.email })
     if(usuarioExiste){
         return 'Este e-mail já foi registrado!'
     }
 }
 
-export async function validarLogin(dadosForm) {
-    if(!dadosForm.email ){
-        return 'Você não forneceu um e-mail válido!'    
+export const validarCredenciais = async (email, senha) => {
+    let callBack = Object.create(resposta)
+
+    const usuarioBd = await Usuario.findOne({ email: email })
+    if( !usuarioBd ){
+        //callBack.httpCode = 401
+        callBack.msg = 'E-mail e/ou senha inválidos!'
+        return callBack    
     }
-    if(!dadosForm.senha){
-        return 'Você não forneceu uma senha válida!'    
+    const confirmarSenha = await validarSenha(senha, usuarioBd.senha)
+    if( !confirmarSenha ){
+        //callBack.httpCode = 401
+        callBack.msg = 'E-mail e/ou senha inválidos!'
+        return callBack    
     }
-    const usuarioBD = await Usuario.findOne({ email: dadosForm.email })
-    if(!usuarioBD){
-        return 'Senha ou e-mail inválidos!!'
-    }
-    const result = await validarSenha(dadosForm.senha, usuarioBD.senha)
-    if( !result ){
-        return 'Senha ou e-mail inválidos!!'
-    }
+    callBack.httpCode = 100
+    callBack.msg = usuarioBd
+    return callBack    
 }
 
 export async function validarUsuario(queryRes) {

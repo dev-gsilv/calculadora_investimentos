@@ -5,9 +5,9 @@ import objToConsole from '../utils/objPrint.js'
 
 export const create = async (req, res) => {
     try {
-        const {nome, email, senha, confirmarSenha} = req.body
+        const {nome, email, senha} = req.body
 
-        const novoUsuario = {nome, email, senha, confirmarSenha}
+        const novoUsuario = {nome, email, senha}
         const erro = await validarNovoUsuario(novoUsuario)
         if(erro){
             return res.status(422).json({msg: erro})
@@ -37,20 +37,30 @@ export const create = async (req, res) => {
 }
 
 export const getOne =  async (req, res) => {
-    const id = req.params.id
+    try {
+        const id = req.params.id
 
-    const usuario = await validarUsuario(await Usuario.findById(id, "-senha"))
-
-    return res.status(usuario.httpCode).json({ msg: usuario.msg })
+        const usuario = await validarUsuario(await Usuario.findById(id, "-senha"))
+    
+        return res.status(usuario.httpCode).json({ msg: usuario.msg })
+    } catch (e) {
+        console.error(e)
+        res.status(400).json({msg: 'Requisição inválida. Por favor, tente novamente.'})
+    }
 }
 
 export const getAll = async (req, res) => {
-    const usuarios = await validarUsuario(await Usuario.find({}, "-senha"))
+    try {
+        const usuarios = await validarUsuario(await Usuario.find({}, "-senha"))
 
-    return res.status(usuarios.httpCode).json({ 
-        Total: usuarios.msg.length, 
-        Usuarios: usuarios.msg 
-    })    
+        return res.status(usuarios.httpCode).json({ 
+            Total: usuarios.msg.length, 
+            Usuarios: usuarios.msg 
+        })  
+    } catch (e) {
+        console.error(e)
+        res.status(400).json({msg: 'Requisição inválida. Por favor, tente novamente.'})        
+    }
 }
 
 export const update = async (req, res) => {
