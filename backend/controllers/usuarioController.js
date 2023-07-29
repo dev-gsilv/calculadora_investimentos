@@ -1,7 +1,33 @@
 import bcrypt from 'bcrypt'
-import { validarNovoUsuario, validarUsuario, validarSenha } from '../utils/validacoes.js'
+import { validarNovoUsuario, validarUsuario, validarSenha, objExiste } from '../utils/validacoes.js'
 import Usuario from '../models/Usuario.js'
 import objToConsole from '../utils/objPrint.js'
+
+const templateRbac = async () => {
+    const usuarioId = req.get('usuarioId')
+    const role = req.get('role')
+    let query, resource
+
+    if(role == 'admin'){
+        resource = await Model.find({})
+        query = await objExiste(resource)
+        return res.status(query.httpCode).json({ msg: query.msg })
+    }
+
+    if(role == 'usuario'){
+        resource = await Model.find({param: value})
+        query = await objExiste(resource)
+
+        if(query.httpCode == 404){
+            return res.status(query.httpCode).json({ 'Erro': query.msg })
+        }
+
+        if(usuarioId != resource.ID){
+            return res.status(403).json({'Erro': 'Você não tem permissão para ver este recurso!'})
+        }
+        return res.status(200).json({msg: resource})    
+    }
+}
 
 export const create = async (req, res) => {
     try {
@@ -39,10 +65,29 @@ export const create = async (req, res) => {
 export const getOne =  async (req, res) => {
     try {
         const id = req.params.id
-
-        const usuario = await validarUsuario(await Usuario.findById(id, "-senha"))
+        const usuarioId = req.get('usuarioId')
+        const role = req.get('role')
+        let query, resource
     
-        return res.status(usuario.httpCode).json({ msg: usuario.msg })
+        if(role == 'admin'){
+            resource = await Usuario.findById(id, "-senha")
+            query = await objExiste(resource)
+            return res.status(query.httpCode).json({ msg: query.msg })
+        }
+    
+        if(role == 'usuario'){
+            resource = await Usuario.findById(id, "-senha")
+            query = await objExiste(resource)
+    
+            if(query.httpCode == 404){
+                return res.status(query.httpCode).json({ 'Erro': query.msg })
+            }
+    
+            if(usuarioId != id){
+                return res.status(403).json({'Erro': 'Você não tem permissão para ver este recurso!'})
+            }
+            return res.status(200).json({Usuario: resource})    
+        }
     } catch (e) {
         console.error(e)
         res.status(400).json({msg: 'Requisição inválida. Por favor, tente novamente.'})
@@ -51,12 +96,22 @@ export const getOne =  async (req, res) => {
 
 export const getAll = async (req, res) => {
     try {
-        const usuarios = await validarUsuario(await Usuario.find({}, "-senha"))
-
-        return res.status(usuarios.httpCode).json({ 
-            Total: usuarios.msg.length, 
-            Usuarios: usuarios.msg 
-        })  
+        const usuarioId = req.get('usuarioId')
+        const role = req.get('role')
+        let query, resource
+    
+        if(role == 'admin'){
+            resource = await Usuario.find({}, "-senha")
+            query = await objExiste(resource)
+            return res.status(query.httpCode).json({
+                Total: resource.length, 
+                'Usuarios (admin_view)': resource      
+            })
+        }
+    
+        if(role == 'usuario'){
+            return res.status(403).json({'Erro': 'Voce nao tem permissao para fazer esta requisiçao!'})    
+        }
     } catch (e) {
         console.error(e)
         res.status(400).json({msg: 'Requisição inválida. Por favor, tente novamente.'})        
@@ -65,38 +120,77 @@ export const getAll = async (req, res) => {
 
 export const update = async (req, res) => {
     try {
+        const usuarioId = req.get('usuarioId')
+        const role = req.get('role')
         const {nome, senhaAntiga, senhaNova} = req.body
         const id = req.params.id
+        let query, resource
+    
+        if(role == 'admin'){
+            resource = await Usuario.findById(id)
+            query = await objExiste(resource)
+            
+            if(query.httpCode === 404){
+                return res.status(query.httpCode).json({ msg: query.msg }) 
+            }
+           
+            if(senhaAntiga && senhaNova) {
+                const senhaValida = await validarSenha(senhaAntiga, resource.senha)
+                if(!senhaValida){
+                    return res.status(422).json({ msg: 'Senha incorreta!' })
+                }
 
-        const usuarioCheck = await validarUsuario(await Usuario.findById(id))
+                const salt = await bcrypt.genSalt(12)
+                const senhaHash = await bcrypt.hash(senhaNova, salt)
+                resource.senha = senhaHash
+            }
+            
+            if(nome){
+                resource.nome = nome
+            }     
 
-        if(usuarioCheck.httpCode === 404){
-            return res.status(usuarioCheck.httpCode).json({ msg: usuarioCheck.msg }) 
+            try {
+                await resource.save()
+                res.status(200).json({msg: 'Usuário atualizado!'})
+            } catch (e) {
+                console.error(e)
+                res.status(500).json({msg: 'Erro no servidor. Por favor, tente novamente!'})
+            }
         }
-
-        const usuario = usuarioCheck.msg
-        
-        if(senhaAntiga && senhaNova) {
-            const senhaValida = await validarSenha(senhaAntiga, usuario.senha)
-            if(!senhaValida){
-                return res.status(422).json({ msg: 'Senha incorreta!' })
+        if(role == 'usuario'){
+            if(usuarioId != id){
+                return res.status(403).json({'Erro': 'Voce nao tem permissao para fazer esta requisiçao!'})    
             }
 
-            const salt = await bcrypt.genSalt(12)
-            const senhaHash = await bcrypt.hash(senhaNova, salt)
-            usuario.senha = senhaHash
-        }
-        
-        if(nome){
-            usuario.nome = nome
-        }     
+            resource = await Usuario.findById(id)
+            query = await objExiste(resource)
+            
+            if(query.httpCode === 404){
+                return res.status(query.httpCode).json({ msg: query.msg }) 
+            }
+           
+            if(senhaAntiga && senhaNova) {
+                const senhaValida = await validarSenha(senhaAntiga, resource.senha)
+                if(!senhaValida){
+                    return res.status(422).json({ msg: 'Senha incorreta!' })
+                }
 
-        try {
-            await usuario.save()
-            res.status(200).json({msg: 'Usuário atualizado!'})
-        } catch (e) {
-            console.error(e)
-            res.status(500).json({msg: 'Erro no servidor. Por favor, tente novamente!'})
+                const salt = await bcrypt.genSalt(12)
+                const senhaHash = await bcrypt.hash(senhaNova, salt)
+                resource.senha = senhaHash
+            }
+            
+            if(nome){
+                resource.nome = nome
+            }     
+
+            try {
+                await resource.save()
+                res.status(200).json({msg: 'Usuário atualizado!'})
+            } catch (e) {
+                console.error(e)
+                res.status(500).json({msg: 'Erro no servidor. Por favor, tente novamente!'})
+            }
         }
 
     } catch (e) {
@@ -105,6 +199,7 @@ export const update = async (req, res) => {
     }
 }
 
+// FALTA IMPLEMENTAR RBAC
 export const remove = async (req, res) => {
     try {
         const id = req.params.id
@@ -131,6 +226,7 @@ export const remove = async (req, res) => {
     }
 }
 
+// FALTA IMPLEMENTAR RBAC
 export const removeWhere = async (req, res) => {
     try {
         const condition = req.body.condition

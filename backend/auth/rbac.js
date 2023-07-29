@@ -44,6 +44,7 @@ export const permissionMiddleware = async (req, res, next) => {
             permission = ac.can(loggedRole).readOwn("investimento") && ac.can(loggedRole).deleteOwn("investimento");
         }
 
+        // CONTROLE DE AUTORIZAÇAO
         if (permission.granted) {
             next()
         } else {
@@ -51,7 +52,7 @@ export const permissionMiddleware = async (req, res, next) => {
         }
 
     } catch (e) {
-        console.log(e)
+        console.error(e)
         res.status(500).send({msg: 'Erro no servidor. Tente novamente'});
     }
 }
