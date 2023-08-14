@@ -50,7 +50,8 @@ export const create = async (req, res) => {
 
         try {
             await usuarioValidado.save()
-            res.status(201).json({msg: `Bem-vindo ao Simulfix, ${usuarioValidado.nome}!`})
+            const resource = await Usuario.find({email: usuarioValidado.email})
+            res.status(201).json({msg: `Bem-vindo ao Simulfix, ${resource[0].nome}!`, ID: resource[0]._id })
         } catch (e) {
             console.error(e)
             res.status(500).json({msg: 'Erro no servidor. Por favor, tente novamente!'})
@@ -199,48 +200,87 @@ export const update = async (req, res) => {
     }
 }
 
-// FALTA IMPLEMENTAR RBAC
 export const remove = async (req, res) => {
-    try {
-        const id = req.params.id
+    const id = req.params.id
+    const usuarioId = req.get('usuarioId')
+    const role = req.get('role')
+    let query, resource
 
-        const usuarioCheck = await validarUsuario(await Usuario.findById(id))
-
-        if(usuarioCheck.httpCode == 404){
-            return res.status(usuarioCheck.httpCode).json({ msg: usuarioCheck.msg }) 
-        }
-
-        const usuario = usuarioCheck.msg
-
+    if(role == 'admin'){
         try {
-            const query = await usuario.deleteOne({id: id})
-            res.status(200).json({msg: 'Usuario removido!', Usuario_ID: query._id})
+            resource = await validarUsuario(await Usuario.findById(id))
+    
+            if(resource.httpCode == 404){
+                return res.status(resource.httpCode).json({ msg: resource.msg }) 
+            }
+    
+            const usuarioPerfil = resource.msg
+    
+            try {
+                query = await usuarioPerfil.deleteOne({id: id})
+                res.status(200).json({msg: 'Usuario removido!', Usuario_ID: query._id})
+            } catch (e) {
+                console.error(e)
+                res.status(500).json({msg: 'Erro no servidor. Por favor, tente novamente!'})
+            }
         } catch (e) {
             console.error(e)
-            res.status(500).json({msg: 'Erro no servidor. Por favor, tente novamente!'})
+            res.status(400).json({msg: 'Requisição inválida. Por favor, tente novamente.'})
         }
+    }
 
-    } catch (e) {
-        console.error(e)
-        res.status(400).json({msg: 'Requisição inválida. Por favor, tente novamente.'})
+    if(role == 'usuario'){        
+        try {
+            resource = await validarUsuario(await Usuario.findById(id))
+    
+            if(resource.httpCode == 404){
+                return res.status(resource.httpCode).json({ msg: resource.msg }) 
+            }
+    
+            const usuarioPerfil = resource.msg
+    
+            if(usuarioId != id){
+                return res.status(403).json({'Erro': 'Você não tem permissão para ver este recurso!'})
+            }
+            try {
+                query = await usuarioPerfil.deleteOne({id: id})
+                res.status(200).json({msg: 'Usuario removido!', Usuario_ID: query._id})
+            } catch (e) {
+                console.error(e)
+                res.status(500).json({msg: 'Erro no servidor. Por favor, tente novamente!'})
+            }   
+        } catch (e) {
+            console.error(e)
+            res.status(400).json({msg: 'Requisição inválida. Por favor, tente novamente.'})
+        }
     }
 }
 
-// FALTA IMPLEMENTAR RBAC
 export const removeWhere = async (req, res) => {
-    try {
-        const condition = req.body.condition
+    const id = req.params.id
+    const usuarioId = req.get('usuarioId')
+    const role = req.get('role')
+    let query
 
+    if(role == 'admin'){
         try {
-            const query = await Usuario.deleteMany(condition)
-            res.status(200).json({'Usuários removidos: ': query.deletedCount})
+            const condition = req.body.condition
+    
+            try {
+                query = await Usuario.deleteMany(condition)
+                res.status(200).json({'Usuários removidos: ': query.deletedCount})
+            } catch (e) {
+                console.error(e)
+                res.status(500).json({msg: 'Erro no servidor. Por favor, tente novamente!'})
+            }
+    
         } catch (e) {
             console.error(e)
-            res.status(500).json({msg: 'Erro no servidor. Por favor, tente novamente!'})
+            res.status(400).json({msg: 'Requisição inválida. Por favor, tente novamente.'})
         }
+    }
 
-    } catch (e) {
-        console.error(e)
-        res.status(400).json({msg: 'Requisição inválida. Por favor, tente novamente.'})
+    if(role == 'usuario'){
+        return res.status(403).json({'Erro': 'Voce nao tem permissao para fazer esta requisiçao!'})    
     }
 }
