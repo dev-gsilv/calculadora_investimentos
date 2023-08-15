@@ -26,7 +26,7 @@ jobs:
         username: ubuntu
         key: ${{ secrets.SSH_KEY }}
         script: |
-          cd /home/ubuntu/PATH
+          cd /home/ubuntu/calculadora_investimentos
           git stash
           git pull origin main
           npm install
