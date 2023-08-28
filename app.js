@@ -1,15 +1,15 @@
-import express from 'express'
+import express from "express";
 
-const app = express()
+const app = express();
 
-app.use(express.json())
+app.use(express.json());
 
 // DB CONNECTION
-import conn from './backend/db/mongo.js'
+import conn from "./backend/db/mongo.js";
 conn();
 
-app.listen(process.env.API_PORT)
+app.listen(process.env.API_PORT);
 
 // Routes
-import routes from './backend/routes/router.js'
-routes(app)
+import routes from "./backend/routes/router.js";
+routes(app);
