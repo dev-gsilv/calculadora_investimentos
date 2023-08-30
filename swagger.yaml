@@ -11,14 +11,18 @@ components:
             type: http
             scheme: bearer
             bearerFormat: JWT
-        userIdHeader:
-            type: string
-            in: header
-            name: X-usuarioId
         userRoleHeader:
-            type: string
+            type: apiKey
+            name: role
+            paramName: role
             in: header
-            name: X-role
+            description: Um header de requisição com o tipo de usuário logado. Por padrão, todo usuário registrado é do tipo "usuario".
+        userIdHeader:
+            type: apiKey
+            name: usuarioId
+            paramName: usuarioId
+            in: header
+            description: 'Um header de requisição com o ID de usuário logado. Por exemplo: 64bdc44a9b37ab98fdce2d31.'
     responses:
         UnauthorizedError401:
             description: Unauthorized - Token de acesso não encontrado ou inválido.
@@ -79,12 +83,47 @@ components:
                 __v:
                     type: int
                     example: 0
+        UsuarioPut:
+            type: object
+            properties:
+                nome:
+                    type: string
+                    example: Fulano da Silva Sauro
+                senhaAntiga:
+                    type: string
+                    example: 12345678
+                senhaNova:
+                    type: string
+                    example: 123456789
+    parameters:
+        userIdHeader:
+            name: usuarioId
+            in: header
+            description: ID do usuário logado.
+            required: true
+            schema:
+                type: string
+                format: objectId
+        userRoleHeader:
+            name: role
+            in: header
+            description: tipo de usuário logado.
+            required: true
+            schema:
+                type: string
+                default: usuario
+
+security:
+    - bearerAuth: []
+    - userRoleHeader: []
+    - userIdHeader: []
 
 paths:
     /usuario/registro:
         post:
             tags: [Usuário]
             summary: Cria um novo usuário.
+            security: []
             requestBody:
                 required: true
                 content:
@@ -116,21 +155,18 @@ paths:
 
     /usuario/{id}:
         get:
-            security:
-                bearerAuth: []
-                userRoleHeader: []
-                userIdHeader: []
             tags: [Usuário]
-            summary: Busca um usuário por meio de seu ID.
+            summary: Busca um usuário, por meio de seu ID.
             parameters:
                 - in: path
                   name: id
+                  description: ID do usuário a pesquisar. Deve ser o mesmo do usuário logado.
                   required: true
                   schema:
                       type: string
                       format: objectId
                       minimum: 24
-                      example: 64bdc44a9b37ab98ddce2d30
+                      example: 64bdc44a9b37ab98fdce2d31
             responses:
                 '200':
                     description: OK - Usuário encontrado.
@@ -145,19 +181,32 @@ paths:
                 '404':
                     $ref: '#/components/responses/NotFoundError404'
         put:
-            security:
-                bearerAuth: []
             tags: [Usuário]
             summary: Atualiza os dados de um usuário, por meio de seu ID.
             requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UsuarioPut'
             parameters:
+                - in: path
+                  name: id
+                  description: ID do usuário a modificar. Deve ser o mesmo do usuário logado.
+                  required: true
+                  schema:
+                      type: string
+                      format: objectId
+                      minimum: 24
+                      example: 64bdc44a9b37ab98fdce2d31
             responses:
                 '200':
-                    description: OK - Usuário atualizado.
+                    description: OK - Usuário modificado com sucesso.
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/UsuarioGet'
+                                type: string
+                                example: Usuário atualizado!
                 '401':
                     $ref: '#/components/responses/UnauthorizedError401'
                 '403':
@@ -165,18 +214,26 @@ paths:
                 '404':
                     $ref: '#/components/responses/NotFoundError404'
         delete:
-            security:
-                bearerAuth: []
             tags: [Usuário]
-            summary: Remove um usuário por meio de seu ID.
+            summary: Remove um usuário, por meio de seu ID.
             parameters:
+                - in: path
+                  name: id
+                  description: ID do usuário a remover. Deve ser o mesmo do usuário logado.
+                  required: true
+                  schema:
+                      type: string
+                      format: objectId
+                      minimum: 24
+                      example: 64bdc44a9b37ab98fdce2d31
             responses:
                 '204':
                     description: No Content - Usuário removido.
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/UsuarioGet'
+                                type: string
+                                example: 'Usuário removido!, Usuario_ID: 64ef82d4787d88ba6fcf47a1'
                 '401':
                     $ref: '#/components/responses/UnauthorizedError401'
                 '403':
@@ -184,39 +241,325 @@ paths:
                 '404':
                     $ref: '#/components/responses/NotFoundError404'
 
-    /usuario:
-        get:
-            security:
-                bearerAuth: []
-            tags: [Usuário]
-            summary: Busca todos os usuários registrados. Exclusivo para o administrador do sistema.
+    /investimento:
+        post:
+            tags: [Investimento]
+            summary: Cria um novo investimento.
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                nome:
+                                    type: string
+                                    default: CBD 180 DIAS 103%
+                                tipoInvest:
+                                    type: string
+                                    default: cdb
+                                indexador:
+                                    type: string
+                                    default: pre
+                                valorInvestido:
+                                    type: string
+                                    default: 5000
+                                prazoMeses:
+                                    type: string
+                                    default: 180
+                                rentabilidadeAnual:
+                                    type: string
+                                    default: 103
+                        examples:
+                            pré-fixado:
+                                summary: Investimento com indexador pré-fixado.
+                                value:
+                                    nome: LCI 180 DIAS 9% a.a.
+                                    tipoInvest: lci
+                                    indexador: pre
+                                    prazoMeses: 6
+                                    valorInvestido: 10000
+                                    rentabilidadeAnual: 9
+                            pos-fixado:
+                                summary: Investimento com indexador pós-fixado.
+                                value:
+                                    nome: CBD 180 DIAS 103% CDI
+                                    tipoInvest: cdb
+                                    indexador: pos
+                                    prazoMeses: 6
+                                    valorInvestido: 10000
+                                    rentabilidadeAnual: 103
+                            misto:
+                                summary: Investimento com indexador misto.
+                                value:
+                                    nome: CRI 180 DIAS IPCA + 5%
+                                    tipoInvest: cri
+                                    indexador: misto
+                                    prazoMeses: 6
+                                    valorInvestido: 10000
+                                    rentabilidadeAnual: 5
             responses:
-                '200':
-                    description: OK - Usuário(s) encontrado(s).
+                '201':
+                    description: Created - Novo investimento registrado com sucesso.
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/UsuarioGet'
-                '401':
-                    $ref: '#/components/responses/UnauthorizedError401'
+                                type: object
+                                properties:
+                                    msg:
+                                        type: string
+                                        example: Simulação de investimento criada!
+                                    invest:
+                                        type: object
+                                        properties:
+                                            nome:
+                                                type: string
+                                                example: CBD 180 DIAS 103%
+                                            tipo:
+                                                type: string
+                                                example: cdb
+                                            indexador:
+                                                type: string
+                                                example: pos
+                                            prazo:
+                                                type: string
+                                                example: 180
+                                            valorInvestido:
+                                                type: string
+                                                example: 10000
+                                            valorJuros:
+                                                type: string
+                                                example: 508.18777411233054
+                                            valorTotalBruto:
+                                                type: string
+                                                example: 10655.726160144943
+                                            valorTotalLiquido:
+                                                type: string
+                                                example: 10508.18777411233
+                                            impostoRenda:
+                                                type: object
+                                                properties:
+                                                    valor:
+                                                        type: string
+                                                        example: 147.53838603261212
+                                                    incidente:
+                                                        type: boolean
+                                            criadorId:
+                                                type: string
+                                                example: 64da6d42414b482d65989625
+                                            _id:
+                                                type: string
+                                                example: 64ef89bf97490915d98b6ef5
+                                            createdAt:
+                                                type: string
+                                                format: date-time
+                                                example: 2023-08-30T18:26:07.968Z
+                                            updatedAt:
+                                                type: string
+                                                format: date-time
+                                                example: 2023-08-30T18:26:07.968Z
+                                            __v:
+                                                type: string
+                                                example: 0
+                '400':
+                    description: Bad Request - Inconsistência no(s) dado(s) do investimento.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                example: Requisição inválida. Por favor, tente novamente.
+                '422':
+                    description: Unprocessable Content - Erro de validação no(s) dado(s) do investimento.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                example: O campo tipo de investimento é inválido!
+                '500':
+                    description: Internal Server Error - O servidor encontrou um erro inesperado.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                example: Erro no servidor. Por favor, tente novamente!
+        get:
+            tags: [Investimento]
+            summary: Busca todos os investimentos do usuário logado.
+            responses:
+                '200':
+                    description: OK - Investimento localizado com sucesso.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    Total:
+                                        type: string
+                                        example: 1
+                                    Lista:
+                                        type: object
+                                        properties:
+                                            nome:
+                                                type: string
+                                                example: CBD 180 DIAS 103%
+                                            tipo:
+                                                type: string
+                                                example: cdb
+                                            indexador:
+                                                type: string
+                                                example: pos
+                                            prazo:
+                                                type: string
+                                                example: 180
+                                            valorInvestido:
+                                                type: string
+                                                example: 10000
+                                            valorJuros:
+                                                type: string
+                                                example: 508.18777411233054
+                                            valorTotalBruto:
+                                                type: string
+                                                example: 10655.726160144943
+                                            valorTotalLiquido:
+                                                type: string
+                                                example: 10508.18777411233
+                                            impostoRenda:
+                                                type: object
+                                                properties:
+                                                    valor:
+                                                        type: string
+                                                        example: 147.53838603261212
+                                                    incidente:
+                                                        type: boolean
+                                            criadorId:
+                                                type: string
+                                                example: 64da6d42414b482d65989625
+                                            _id:
+                                                type: string
+                                                example: 64ef89bf97490915d98b6ef5
+                                            createdAt:
+                                                type: string
+                                                format: date-time
+                                                example: 2023-08-30T18:26:07.968Z
+                                            updatedAt:
+                                                type: string
+                                                format: date-time
+                                                example: 2023-08-30T18:26:07.968Z
+                                            __v:
+                                                type: string
+                                                example: 0
+                '403':
+                    $ref: '#/components/responses/ForbiddenError403'
+                '404':
+                    $ref: '#/components/responses/NotFoundError404'
+
+    /investimento/{id}:
+        get:
+            tags: [Investimento]
+            summary: Busca um investimento salvo.
+            parameters:
+                - in: path
+                  name: id
+                  description: ID do investimento a pesquisar.
+                  required: true
+                  schema:
+                      type: string
+                      format: objectId
+                      minimum: 24
+                      example: 64bdc6894fdad6d4200b33b0
+
+            responses:
+                '200':
+                    description: OK - Investimento localizado com sucesso.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    msg:
+                                        type: object
+                                        properties:
+                                            nome:
+                                                type: string
+                                                example: CBD 180 DIAS 103%
+                                            tipo:
+                                                type: string
+                                                example: cdb
+                                            indexador:
+                                                type: string
+                                                example: pos
+                                            prazo:
+                                                type: string
+                                                example: 180
+                                            valorInvestido:
+                                                type: string
+                                                example: 10000
+                                            valorJuros:
+                                                type: string
+                                                example: 508.18777411233054
+                                            valorTotalBruto:
+                                                type: string
+                                                example: 10655.726160144943
+                                            valorTotalLiquido:
+                                                type: string
+                                                example: 10508.18777411233
+                                            impostoRenda:
+                                                type: object
+                                                properties:
+                                                    valor:
+                                                        type: string
+                                                        example: 147.53838603261212
+                                                    incidente:
+                                                        type: boolean
+                                            criadorId:
+                                                type: string
+                                                example: 64da6d42414b482d65989625
+                                            _id:
+                                                type: string
+                                                example: 64ef89bf97490915d98b6ef5
+                                            createdAt:
+                                                type: string
+                                                format: date-time
+                                                example: 2023-08-30T18:26:07.968Z
+                                            updatedAt:
+                                                type: string
+                                                format: date-time
+                                                example: 2023-08-30T18:26:07.968Z
+                                            __v:
+                                                type: string
+                                                example: 0
                 '403':
                     $ref: '#/components/responses/ForbiddenError403'
                 '404':
                     $ref: '#/components/responses/NotFoundError404'
         delete:
-            security:
-                bearerAuth: []
-            tags: [Usuário]
-            summary: Remove vários usuários registrados. Exclusivo para o administrador do sistema.
-            requestBody:
+            tags: [Investimento]
+            summary: Remove um investimento salvo.
+            parameters:
+                - in: path
+                  name: id
+                  description: ID do investimento a remover.
+                  required: true
+                  schema:
+                      type: string
+                      format: objectId
+                      minimum: 24
+                      example: 64bdc6894fdad6d4200b33b0
+
             responses:
                 '204':
-                    description: No Content - Usuário(s) removido(s).
+                    description: No Content - Investimento removido com sucesso.
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/UsuarioGet'
-                '401':
-                    $ref: '#/components/responses/UnauthorizedError401'
+                                type: object
+                                properties:
+                                    msg:
+                                        type: string
+                                        example: LCI 180 DIAS 9% a.a. (id: 64efa73b67f291f496c9969e) removido da base de dados!
+
                 '403':
                     $ref: '#/components/responses/ForbiddenError403'
+                '404':
+                    $ref: '#/components/responses/NotFoundError404'
+

@@ -31,7 +31,7 @@ export const validarDados = invest => {
 export const objExiste = queryRes => {
     const callBack = Object.create(resposta);
 
-    if (queryRes === undefined || queryRes === null || queryRes.length == 0) {
+    if (queryRes === undefined || queryRes === null || queryRes.length === 0) {
         callBack.httpCode = 404;
         callBack.msg = 'Não há resultados para sua busca.';
         return callBack;
@@ -42,7 +42,7 @@ export const objExiste = queryRes => {
 };
 
 export async function validarSenha(senhaForm, senhaHash) {
-    return await bcrypt.compare(senhaForm, senhaHash);
+    return bcrypt.compare(senhaForm, senhaHash);
 }
 
 export async function validarNovoUsuario(dadosForm, next) {

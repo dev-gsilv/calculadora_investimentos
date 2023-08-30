@@ -1,31 +1,32 @@
 {
-  "name": "calculadora_investimentos",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "prettier": "npx prettier --write --ignore-unknown .",
-    "start": "nodemon app.js"
-  },
-  "type": "module",
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "accesscontrol": "^2.2.1",
-    "bcrypt": "^5.1.0",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "jsonwebtoken": "^9.0.1",
-    "mongoose": "^7.3.4",
-    "swagger-ui-express": "^5.0.0",
-    "yamljs": "^0.3.0"
-  },
-  "devDependencies": {
-    "eslint": "^8.48.0",
-    "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-plugin-import": "^2.28.1",
-    "nodemon": "^3.0.1",
-    "prettier": "^3.0.2"
-  }
+    "name": "calculadora_investimentos",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "prettier": "npx prettier --write --ignore-unknown .",
+        "dev": "nodemon app.js",
+        "start": "pm2 start app.js"
+    },
+    "type": "module",
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "accesscontrol": "^2.2.1",
+        "bcrypt": "^5.1.0",
+        "dotenv": "^16.3.1",
+        "express": "^4.18.2",
+        "jsonwebtoken": "^9.0.1",
+        "mongoose": "^7.3.4",
+        "swagger-ui-express": "^5.0.0",
+        "yamljs": "^0.3.0"
+    },
+    "devDependencies": {
+        "eslint": "^8.48.0",
+        "eslint-config-airbnb-base": "^15.0.0",
+        "eslint-plugin-import": "^2.28.1",
+        "nodemon": "^3.0.1",
+        "prettier": "^3.0.2"
+    }
 }

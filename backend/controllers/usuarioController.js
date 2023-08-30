@@ -184,7 +184,7 @@ export const update = async (req, res) => {
         if (role === 'usuario') {
             if (usuarioId !== id) {
                 return res.status(403).json({
-                    Erro: 'Voce nao tem permissao para fazer esta requisiçao!',
+                    Erro: 'Você não tem permissão para fazer esta requisição!',
                 });
             }
 

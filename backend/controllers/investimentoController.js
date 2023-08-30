@@ -1,6 +1,6 @@
 import Investimento from '../models/Investimento.js';
 import { validarDados, objExiste } from '../utils/validacoes.js';
-import { toLocal, toBrl } from '../utils/currencyFormat.js';
+import { cdiAtual, ipcaAtual } from '../utils/indicadores.js';
 import objToConsole from '../utils/objPrint.js';
 
 // CONVERTER JUROS AO ANO PARA JUROS AO DIA
@@ -16,11 +16,8 @@ const calcularLucro = async (
     let resultado;
     let jurosAoDia;
     let jurosTotais;
-    // PESQUISAR UMA API PARA PUXAR ESSES DADOS ATUALIZADOS
-    // https://www.dadosdemercado.com.br/economia/cdi, https://www.bcb.gov.br/htms/SELIC/SELICdiarios.asp?frame=1
-    // https://www.dadosdemercado.com.br/economia/ipca-15, https://sidra.ibge.gov.br/tabela/7060#/n1/all/n7/all/n6/all/v/2265/p/202307/c315/all/d/v2265%202/l/,p+t+v,c315/resultado
-    const cdi = 13.15;
-    const ipca = 3.99;
+    const cdi = cdiAtual;
+    const ipca = ipcaAtual;
 
     switch (indexador) {
         case 'pre':
@@ -31,6 +28,7 @@ const calcularLucro = async (
 
         case 'pos':
             // FALTA UM IF VALIDANDO SE A RENTABILIDADE É % DA CDI OU CDI + SPREAD
+            // A FUNCIONALIDADE ATUAL CONSIDERA APENAS % DA CDI
             jurosTotais = (rentabilidadeAnual * cdi) / 100;
             jurosAoDia = await calcularJurosAoDia(jurosTotais);
             resultado =
@@ -269,7 +267,7 @@ export const getOne = async (req, res) => {
 
         const investimento = query.msg;
 
-        if (usuarioId !== investimento.criadorId) {
+        if (usuarioId !== investimento.criadorId.toString()) {
             return res
                 .status(403)
                 .json({ msg: 'Você não tem permissão para ver este recurso!' });
@@ -367,7 +365,7 @@ export const remove = async (req, res) => {
                 });
             }
             if (role === 'usuario') {
-                if (usuarioId !== investimento.criadorId) {
+                if (usuarioId !== investimento.criadorId.toString()) {
                     return res.status(403).json({
                         msg: 'Você não tem permissão para remover este recurso!',
                     });
@@ -375,7 +373,7 @@ export const remove = async (req, res) => {
                 query = await investimento.deleteOne({
                     _id: investimentoId,
                 });
-                return res.status(200).json({
+                return res.status(204).json({
                     msg:
                         `${query.nome} (id: ${query._id}) ` +
                         'removido da base de dados!',
