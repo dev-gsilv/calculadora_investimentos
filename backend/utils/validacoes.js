@@ -4,7 +4,7 @@ import Usuario from '../models/Usuario.js';
 
 const resposta = { httpCode: NaN, msg: '' };
 
-export const validarDados = (invest) => {
+export const validarDados = invest => {
     if (!invest.nome) {
         return 'O campo nome é inválido!';
     }
@@ -28,7 +28,7 @@ export const validarDados = (invest) => {
     }
 };
 
-export const objExiste = (queryRes) => {
+export const objExiste = queryRes => {
     const callBack = Object.create(resposta);
 
     if (queryRes === undefined || queryRes === null || queryRes.length == 0) {
@@ -45,12 +45,13 @@ export async function validarSenha(senhaForm, senhaHash) {
     return await bcrypt.compare(senhaForm, senhaHash);
 }
 
-export async function validarNovoUsuario(dadosForm) {
+export async function validarNovoUsuario(dadosForm, next) {
     if (!dadosForm.nome) {
         return 'Você não forneceu um nome válido!';
     }
 
-    const re = /^[a-z0-9.!#$%&'*+\-/=?^_`{|]+@[a-z0-9-]+\.[a-z]+(?:\.[a-z]+)*$/gi;
+    const re =
+        /^[a-z0-9.!#$%&'*+\-/=?^_`{|]+@[a-z0-9-]+\.[a-z]+(?:\.[a-z]+)*$/gi;
     const reCheck = dadosForm.email.match(re);
     if (!dadosForm.email || reCheck === null) {
         return 'Você não forneceu um e-mail válido!';
@@ -64,6 +65,7 @@ export async function validarNovoUsuario(dadosForm) {
     if (usuarioExiste) {
         return 'Este e-mail já foi registrado!';
     }
+    return next;
 }
 
 export const validarCredenciais = async (email, senha) => {
@@ -71,13 +73,13 @@ export const validarCredenciais = async (email, senha) => {
 
     const usuarioBd = await Usuario.findOne({ email });
     if (!usuarioBd) {
-    // callBack.httpCode = 401
+        // callBack.httpCode = 401
         callBack.msg = 'E-mail e/ou senha inválidos!';
         return callBack;
     }
     const confirmarSenha = await validarSenha(senha, usuarioBd.senha);
     if (!confirmarSenha) {
-    // callBack.httpCode = 401
+        // callBack.httpCode = 401
         callBack.msg = 'E-mail e/ou senha inválidos!';
         return callBack;
     }
@@ -112,7 +114,7 @@ export function checkToken(req, res, next) {
 
         next();
     } catch (err) {
-        res.status(400).json({ msg: 'Token inválido!' });
+        res.status(401).json({ msg: 'Token inválido!' });
     }
 }
 

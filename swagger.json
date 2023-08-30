@@ -1,0 +1,9 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Simulfix API",
+        "description": "Simulfix é uma API financeira. Simulando diversos tipos de investimentos em renda fixa, você compara os rendimentos para decidir onde melhor investir seu capital.",
+        "version": "1.0.0"
+    },
+    "basePath": "/"
+}

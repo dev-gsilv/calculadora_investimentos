@@ -1,7 +1,6 @@
 import bcrypt from 'bcrypt';
 import {
     validarNovoUsuario,
-    validarUsuario,
     validarSenha,
     objExiste,
 } from '../utils/validacoes.js';
@@ -38,43 +37,36 @@ const templateRbac = async (req, res) => {
 };
 
 export const create = async (req, res) => {
+    const { nome, email, senha } = req.body;
+
+    const novoUsuario = { nome, email, senha };
+    const erro = await validarNovoUsuario(novoUsuario);
+    if (erro) {
+        return res.status(400).json({ msg: erro });
+    }
+
+    const salt = await bcrypt.genSalt(12);
+    const senhaHash = await bcrypt.hash(senha, salt);
+
+    const usuarioValidado = new Usuario({
+        nome,
+        email,
+        senha: senhaHash,
+    });
+
     try {
-        const { nome, email, senha } = req.body;
-
-        const novoUsuario = { nome, email, senha };
-        const erro = await validarNovoUsuario(novoUsuario);
-        if (erro) {
-            return res.status(422).json({ msg: erro });
-        }
-
-        const salt = await bcrypt.genSalt(12);
-        const senhaHash = await bcrypt.hash(senha, salt);
-
-        const usuarioValidado = new Usuario({
-            nome,
-            email,
-            senha: senhaHash,
+        await usuarioValidado.save();
+        const resource = await Usuario.find({
+            email: usuarioValidado.email,
         });
-
-        try {
-            await usuarioValidado.save();
-            const resource = await Usuario.find({
-                email: usuarioValidado.email,
-            });
-            res.status(201).json({
-                msg: `Bem-vindo ao Simulfix, ${resource[0].nome}!`,
-                ID: resource[0]._id,
-            });
-        } catch (e) {
-            console.error(e);
-            res.status(500).json({
-                msg: 'Erro no servidor. Por favor, tente novamente!',
-            });
-        }
+        res.status(201).json({
+            msg: `Bem-vindo ao Simulfix, ${resource[0].nome}!`,
+            ID: resource[0]._id,
+        });
     } catch (e) {
         console.error(e);
-        res.status(400).json({
-            msg: 'Requisição inválida. Por favor, tente novamente.',
+        res.status(500).json({
+            msg: 'Erro no servidor. Por favor, tente novamente!',
         });
     }
 };
@@ -94,7 +86,7 @@ export const getOne = async (req, res) => {
         }
 
         if (role === 'usuario') {
-            resource = await Usuario.findById(id, '-senha');
+            resource = await Usuario.findById(id, '-senha -role');
             query = await objExiste(resource);
 
             if (query.httpCode === 404) {
@@ -248,15 +240,14 @@ export const remove = async (req, res) => {
 
     if (role === 'admin') {
         try {
-            resource = await validarUsuario(await Usuario.findById(id));
+            resource = await Usuario.findById(id);
+            query = await objExiste(resource);
 
-            if (resource.httpCode === 404) {
-                return res
-                    .status(resource.httpCode)
-                    .json({ msg: resource.msg });
+            if (query.httpCode === 404) {
+                return res.status(query.httpCode).json({ msg: query.msg });
             }
 
-            const usuarioPerfil = resource.msg;
+            const usuarioPerfil = query.msg;
 
             try {
                 query = await usuarioPerfil.deleteOne({ id });
@@ -280,15 +271,14 @@ export const remove = async (req, res) => {
 
     if (role === 'usuario') {
         try {
-            resource = await validarUsuario(await Usuario.findById(id));
+            resource = await Usuario.findById(id);
+            query = await objExiste(resource);
 
-            if (resource.httpCode === 404) {
-                return res
-                    .status(resource.httpCode)
-                    .json({ msg: resource.msg });
+            if (query.httpCode === 404) {
+                return res.status(query.httpCode).json({ msg: query.msg });
             }
 
-            const usuarioPerfil = resource.msg;
+            const usuarioPerfil = query.msg;
 
             if (usuarioId !== id) {
                 return res.status(403).json({
@@ -345,7 +335,7 @@ export const removeWhere = async (req, res) => {
 
     if (role === 'usuario') {
         return res.status(403).json({
-            Erro: 'Voce nao tem permissao para fazer esta requisiçao!',
+            Erro: 'Voce nao tem permissao para fazer esta requisição!',
         });
     }
 };
