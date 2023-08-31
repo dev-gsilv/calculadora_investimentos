@@ -11,6 +11,9 @@ components:
             type: http
             scheme: bearer
             bearerFormat: JWT
+        basicAuth:
+            type: http
+            scheme: basic
         userRoleHeader:
             type: apiKey
             name: role
@@ -119,6 +122,48 @@ security:
     - userIdHeader: []
 
 paths:
+    /auth/login:
+        get:
+            tags: [Login]
+            summary: Cria um novo usuário.
+            security: []
+            parameters:
+              - in: header
+                name: X-Request-email
+                required: true
+                schema:
+                    type: string
+              - in: header
+                name: X-Request-senha
+                required: true
+                schema:
+                    type: string
+            responses:
+                    '200':
+                        description: OK - Usuário logado com sucesso.
+                        content:
+                            application/json:
+                                schema:
+                                    type: object
+                                    properties:
+                                        msg:
+                                            type: string
+                                            example: Usuário autenticado com sucesso!
+                                        token:
+                                            type: string
+                                            example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+                    '401':
+                        description: Unauthorized - Erro no login.
+                        content:
+                            application/json:
+                                schema:
+                                    type: object
+                                    properties:
+                                        Erro:
+                                            type: string
+                                            example: E-mail e/ou senha inválidos!
+
+
     /usuario/registro:
         post:
             tags: [Usuário]
