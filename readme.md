@@ -36,3 +36,11 @@ Para criar uma simulação, você deve informar:
 -   Valor do investimento.
 -   Prazo, em meses.
 -   Rentabilidade anual.
+
+<br>
+
+---
+
+### Documentação
+
+Para mais detalhes em como criar uma simulação, explore a [documentação Swagger](http://54.86.27.160:5000/api-docs/).
