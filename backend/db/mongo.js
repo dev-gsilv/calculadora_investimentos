@@ -10,7 +10,7 @@ export default async function conn() {
             .connect(
                 `mongodb+srv://${dbUser}:${dbPass}@cluster0.zjxjl3f.mongodb.net/?retryWrites=true&w=majority`,
             )
-            .catch((e) => console.error(e));
+            .catch(e => console.error(e));
 
         console.log(`API running on port ${process.env.API_PORT}`);
     } catch (e) {
